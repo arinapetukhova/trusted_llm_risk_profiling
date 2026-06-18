@@ -1,4 +1,6 @@
 mimic-iv-3.1
 mimic-iv-clinical-database-demo-2.2
-ind_hosp.parquet
+*.parquet
 .DS_Store
+.python-version
+*.pkl
