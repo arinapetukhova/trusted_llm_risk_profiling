@@ -4,3 +4,5 @@ mimic-iv-clinical-database-demo-2.2
 .DS_Store
 .python-version
 *.pkl
+*.csv
+*.png
