@@ -6,3 +6,4 @@ mimic-iv-clinical-database-demo-2.2
 *.pkl
 *.csv
 *.png
+*.json
