@@ -18,7 +18,7 @@ config_params = {
 }
 task.connect(config_params)
 
-HF_TOKEN = os.environ.get("HF_TOKEN")
+HF_TOKEN = os.environ.get("HF_TOKEN", "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")
 if not HF_TOKEN:
     raise ValueError("No HF_TOKEN")
 print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
