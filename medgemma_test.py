@@ -11,11 +11,17 @@ task = Task.init(
     output_uri="s3://api.blackhole2.ai.innopolis.university:443/pershin-medailab"
 )
 
-task.connect({
+config_params = {
     "model": "medgemma-27b-it",
     "quantization": True,
-    "max_new_tokens": 512
-})
+    "max_new_tokens": 512,
+    "HF_token": ""
+}
+task.connect(config_params)
+if config_params["HF_token"]:
+    os.environ["HF_TOKEN"] = config_params["HF_token"]
+else:
+    os.environ["HF_TOKEN"] = os.environ.get("HF_TOKEN", "")
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
 login(HF_TOKEN)
