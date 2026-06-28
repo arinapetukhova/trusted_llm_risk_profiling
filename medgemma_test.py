@@ -15,14 +15,11 @@ config_params = {
     "model": "medgemma-27b-it",
     "quantization": True,
     "max_new_tokens": 512,
-    "HF_token": ""
+    "HF_TOKEN": ""
 }
 task.connect(config_params)
 
-if config_params["HF_token"]:
-    os.environ["HF_TOKEN"] = config_params["HF_token"]
-
-HF_TOKEN = os.environ.get("HF_TOKEN")
+HF_TOKEN = config_params.get("HF_TOKEN")
 if not HF_TOKEN:
     raise ValueError("No HF_TOKEN")
 print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
