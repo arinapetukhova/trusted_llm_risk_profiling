@@ -5,7 +5,6 @@ import json
 import os
 from clearml import Task
 
-os.environ["HF_TOKEN"] = "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"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="MedGemma Inference",
