@@ -5,6 +5,7 @@ import json
 import os
 from clearml import Task
 
+os.environ["HF_TOKEN"] = "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"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="MedGemma Inference",
@@ -14,16 +15,14 @@ task = Task.init(
 config_params = {
     "model": "medgemma-27b-it",
     "quantization": True,
-    "max_new_tokens": 512,
-    "HF_token": ""
+    "max_new_tokens": 512
 }
 task.connect(config_params)
-if config_params["HF_token"]:
-    os.environ["HF_TOKEN"] = config_params["HF_token"]
-else:
-    os.environ["HF_TOKEN"] = os.environ.get("HF_TOKEN", "")
 
 HF_TOKEN = os.environ.get("HF_TOKEN")
+if not HF_TOKEN:
+    raise ValueError("No HF_TOKEN")
+print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
 login(HF_TOKEN)
 model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
