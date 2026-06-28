@@ -2,6 +2,7 @@ from transformers import BitsAndBytesConfig, pipeline
 import torch
 from huggingface_hub import login
 import json
+import os
 from clearml import Task
 
 task = Task.init(
@@ -16,7 +17,7 @@ task.connect({
     "max_new_tokens": 512
 })
 
-HF_TOKEN = "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"
+HF_TOKEN = os.environ.get("HF_TOKEN", "default_token_если_не_найден")
 login(HF_TOKEN)
 model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
