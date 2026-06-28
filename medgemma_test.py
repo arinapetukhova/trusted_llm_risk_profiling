@@ -17,7 +17,7 @@ task.connect({
     "max_new_tokens": 512
 })
 
-HF_TOKEN = os.environ.get("HF_TOKEN", "default_token_если_не_найден")
+HF_TOKEN = os.environ.get("HF_TOKEN")
 login(HF_TOKEN)
 model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
