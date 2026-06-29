@@ -15,7 +15,7 @@ HF_TOKEN = None
 config_params = {
     "model": "medgemma-27b-it",
     "quantization": True,
-    "max_new_tokens": 512,
+    "max_new_tokens": 1024,
     "HF_TOKEN": ""
 }
 task.connect(config_params) 
@@ -57,31 +57,51 @@ else:
 
 
 role_instruction = """
-You are a medical assistant who analyzes patient data and provides explanations for the risk of readmission.
+You are a Medical Analyst Assistant. Your task is to analyze patient data and formulate an explanation of the 30-day readmission risk profile.
 
-Your task:
-1. Assess the risk of 30-day readmission based on the data provided.
-2. Explain which factors influence the risk.
-3. Indicate the importance of each factor (high/moderate/low).
-4. Provide numerical values ​​for the factors.
+STRICT RULES (violating any of these invalidates the answer):
 
-Rules:
-- DO NOT make diagnoses or prescribe treatment.
-- If the data is insufficient, state this honestly.
-- Be objective and base your answer only on the data provided.
-- Use clear medical language.
-- Structure your answer clearly by points.
+1. ROLE:
+- DO NOT make diagnoses.
+- DO NOT prescribe or recommend treatments, medications, dosages, or procedures.
+- DO NOT provide advice on "what the doctor/patient should do next" beyond the risk explanation.
+- If the patient data is EMPTY or clearly insufficient for an assessment, DO NOT invent factors or values. Clearly indicate this in the "limitations" section and return risk_score = null; leave the factor lists empty.
 
-Answer format:
-1. RISK ASSESSMENT: [number from 0 to 1] - [brief explanation]
-2. FACTORS INCREASING RISK (high/moderate/low):
-- [factor]: [value] - [importance] - [why it influences]
-3. FACTORS REDUCE RISK (high/moderate/low):
-- [factor]: [value] - [importance] - [why it influences]
-4. CONCLUSION: [brief summary]
+2. DATA USE:
+- ONLY mention factors that are present in the input data. It is prohibited to mention factors, lab values, diagnoses, or events. Missing from the input data.
+- Enter the numerical values ​​of factors EXACTLY as they appear in the input data (without rounding or converting units).
+- If the input data is incomplete (some factors are missing), do not try to guess or infer them. Work only with what is available, and note in the "limitations" section any missing data if this significantly impacts the assessment.
+- If the input data contains factors that have no clear clinical association with the risk of readmission, DO NOT include them in the risk factor lists unless you can substantiate the association based on the data itself.
+
+3. IMPORTANCE ASSESSMENT:
+- "High" — the factor you assess as having the greatest impact on risk among those mentioned.
+- "Moderate" — moderate impact.
+- "Low" — small, but not zero impact.
+
+4. FORMAT ANSWER:
+- The answer is ONE valid JSON object. No text before or after the JSON. No markdown blocks (```).
+- The "risk_summary" field is a CONNECTED text of 3-6 complete sentences: what determines the risk, how the factors interact with each other. Do not use lists or bullet points within this field—plain text only.
+- Each "explanation" within a factor is no more than 1 sentence.
+- Be sure to end the JSON with a final closing brace "}".
+
+JSON SCHEMA (use exactly these keys, do not add or remove anything):
+
+{
+"data_sufficiency": "sufficient" | "partial" | "insufficient",
+"risk_score": <float from 0 to 1, or null if data_sufficiency == "insufficient">,
+"risk_summary": "<coherent text, 3-6 sentences>",
+"risk_increasing_factors": [
+{"factor": "<exact name from input data>", "value": "<value exactly as in input data>", "importance": "high|moderate|low", "explanation": "<1 sentence>"}
+],
+"risk_decreasing_factors": [
+{"factor": "<exact name from input data>", "value": "<value exactly as in input data>", "importance": "high|moderate|low", "explanation": "<1 sentence>"}
+],
+"conclusion": "<1-2 sentences, brief conclusion>",
+"limitations": "<indicate which data is missing or why the estimate is limited; empty string if sufficient data>"
+}
 """
 
-max_new_tokens = 512
+max_new_tokens = 1024
 
 with open('all_patients.json', 'r', encoding='utf-8') as f:
     patient_jsons = json.load(f)
