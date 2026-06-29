@@ -10,6 +10,7 @@ task = Task.init(
     task_name="MedGemma Inference",
     output_uri="s3://api.blackhole2.ai.innopolis.university:443/pershin-medailab"
 )
+HF_TOKEN = None
 
 config_params = {
     "model": "medgemma-27b-it",
@@ -17,21 +18,33 @@ config_params = {
     "max_new_tokens": 512,
     "HF_TOKEN": ""
 }
-task.connect(config_params)
+task.connect(config_params) 
 
-HF_TOKEN = config_params.get("HF_TOKEN")
+if config_params.get("HF_TOKEN"):
+    HF_TOKEN = config_params["HF_TOKEN"]
+
+if not HF_TOKEN:
+    HF_TOKEN = os.environ.get("HF_TOKEN")
+
+
+if not HF_TOKEN:
+    try:
+        HF_TOKEN = task.get_parameter("General/HF_TOKEN") or task.get_parameter("Args/HF_TOKEN")
+    except:
+        pass
+
 if not HF_TOKEN:
     raise ValueError("No HF_TOKEN")
 print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
 login(HF_TOKEN)
+
 model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
 use_quantization = True
 
 model_kwargs = dict(
     dtype=torch.bfloat16,
-    device_map="auto",
-    use_auth_token=HF_TOKEN
+    device_map="auto"
 )
 
 if use_quantization:
@@ -68,7 +81,6 @@ Answer format:
 4. CONCLUSION: [brief summary]
 """
 
-system_instruction = role_instruction
 max_new_tokens = 512
 
 with open('all_patients.json', 'r', encoding='utf-8') as f:
@@ -89,7 +101,6 @@ for idx, p in enumerate(patient_jsons['patients']):
         {"role": "user", "content": [{"type": "text", "text": prompt}]}
     ]
 
-    # Логируем прогресс
     task.get_logger().report_text(f"Processing patient {idx+1}/{total_patients}: {sid}")
     
     output = pipe(text=messages, max_new_tokens=512, do_sample=False)
