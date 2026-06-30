@@ -121,7 +121,7 @@ for idx, p in enumerate(patient_jsons['patients']):
         {"role": "user", "content": [{"type": "text", "text": prompt}]}
     ]
 
-    task.get_logger().report_text(f"Processing patient {idx+1}/{total_patients}: {sid}")
+    task.get_logger().report_text(f"Processing patient (upd) {idx+1}/{total_patients}: {sid}")
     
     output = pipe(text=messages, max_new_tokens=512, do_sample=False)
     response = output[0]["generated_text"][-1]["content"]
