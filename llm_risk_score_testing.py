@@ -79,7 +79,7 @@ with open('patients_sample.json', 'r', encoding='utf-8') as f:
     patient_jsons = json.load(f)
 
 results = []
-total_patients = len(patient_jsons['patients'])
+total_patients = len(patient_jsons)
 for idx, p in enumerate(patient_jsons):
     sid = p['subject_id']
     hid = p['hadm_id']
