@@ -7,3 +7,4 @@ mimic-iv-clinical-database-demo-2.2
 *.csv
 *.png
 *.json
+.env
