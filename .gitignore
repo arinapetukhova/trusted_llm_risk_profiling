@@ -8,3 +8,4 @@ mimic-iv-clinical-database-demo-2.2
 *.png
 *.json
 .env
+*.jsonl
