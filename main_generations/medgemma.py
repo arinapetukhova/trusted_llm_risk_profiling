@@ -144,15 +144,15 @@ results = {
     for context_name in CONTEXT_TYPES
 }
 patients = patient_jsons["patients"]
-total_patients = len(patients)
-
+#total_patients = len(patients)
+total_patients = 4
 for context_name, context_key in CONTEXT_TYPES.items():
 
     task.get_logger().report_text(
         f"\nProcessing {context_name.upper()}"
     )
 
-    for start in range(0, total_patients[:8], BATCH_SIZE):
+    for start in range(0, total_patients, BATCH_SIZE):
 
         batch = patients[start:start + BATCH_SIZE]
         batch_messages = []
