@@ -4,12 +4,15 @@ from huggingface_hub import login
 import json
 import os
 from clearml import Task
-import tempfile
+import time
 
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="MedGemma Inference with SHAP",
     #output_uri="s3://api.blackhole2.ai.innopolis.university:443/pershin-medailab"
+    output_uri=None,
+    auto_connect_arg_parser=False,
+    auto_connect_frameworks=False   
 )
 HF_TOKEN = None
 
@@ -259,31 +262,23 @@ for context_name, context_key in CONTEXT_TYPES.items():
     # )
 
 for context_name in CONTEXT_TYPES:
-
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
-        json.dump(results[context_name], tmp, ensure_ascii=False, indent=2)
-        tmp_path = tmp.name
-    
     task.upload_artifact(
         name=f"medgemma_{context_name}",
-        artifact_object=tmp_path
+        artifact_object=results[context_name],
+        metadata={"type": "json_results", "count": len(results[context_name])}
     )
-    os.unlink(tmp_path)
     print(f"Uploaded artifact: medgemma_{context_name} with {len(results[context_name])} records")
 
 all_results = {}
 for context_name in CONTEXT_TYPES:
     all_results[context_name] = results[context_name]
 
-with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as tmp:
-    json.dump(all_results, tmp, ensure_ascii=False, indent=2)
-    all_results_path = tmp.name
-
 task.upload_artifact(
     name="all_inference_results",
-    artifact_object=all_results_path
+    artifact_object=all_results,
+    metadata={"type": "combined_results"}
 )
-os.unlink(all_results_path)
 
 print("Done")
+time.sleep(10)
 task.close()
