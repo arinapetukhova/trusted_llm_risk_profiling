@@ -45,6 +45,7 @@ if not HF_TOKEN:
     raise ValueError("No HF_TOKEN")
 print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
 login(HF_TOKEN)
+print(os.getcwd())
 
 model_kwargs = dict(
     dtype=torch.bfloat16,
@@ -116,7 +117,7 @@ JSON schema
 }
 """
 
-with open('data/all_patients.json', 'r', encoding='utf-8') as f:
+with open('main_generations/data/all_patients.json', 'r', encoding='utf-8') as f:
     patient_jsons = json.load(f)
 
 with open('data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
