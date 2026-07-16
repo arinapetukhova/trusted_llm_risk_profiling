@@ -281,17 +281,6 @@ def send_results_to_notebook(data, description=""):
         task.get_logger().report_text(f"Send failed: {str(e)}")
         return False
 
-for context_name in CONTEXT_TYPES:
-    send_results_to_notebook(
-        {
-            "context_type": context_name,
-            "task_id": task.id,
-            "task_name": task.name,
-            "data": results[context_name]
-        },
-        f"medgemma_{context_name}"
-    )
-
 all_results = {
     "task_id": task.id,
     "task_name": task.name,
@@ -302,14 +291,6 @@ for context_name in CONTEXT_TYPES:
     all_results["contexts"][context_name] = results[context_name]
 
 send_results_to_notebook(all_results, "all_results_combined")
-
-for context_name in CONTEXT_TYPES:
-    task.upload_artifact(
-        name=f"medgemma_{context_name}",
-        artifact_object=results[context_name],
-        metadata={"type": "json_results", "count": len(results[context_name])}
-    )
-    print(f"Uploaded artifact: medgemma_{context_name} with {len(results[context_name])} records")
 
 all_results = {}
 for context_name in CONTEXT_TYPES:

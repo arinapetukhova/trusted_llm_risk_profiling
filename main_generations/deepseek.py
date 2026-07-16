@@ -4,13 +4,19 @@ from huggingface_hub import login
 import json
 import os
 from clearml import Task
+import time
+import requests
 
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="DeepSeek-R1-Distill-Qwen-32B Inference with SHAP",
-    output_uri="s3://api.blackhole2.ai.innopolis.university:443/pershin-medailab"
+    #output_uri="s3://api.blackhole2.ai.innopolis.university:443/pershin-medailab"
+    output_uri=None,
+    auto_connect_arg_parser=False,
+    auto_connect_frameworks=False   
 )
 HF_TOKEN = None
+RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_id = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
 use_quantization = True
 max_new_tokens = 4000
@@ -119,10 +125,10 @@ JSON schema
 }
 """
 
-with open('data/all_patients.json', 'r', encoding='utf-8') as f:
+with open('main_generations/data/all_patients.json', 'r', encoding='utf-8') as f:
     patient_jsons = json.load(f)
 
-with open('data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
+with open('main_generations/data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
     shap_back_list = json.load(f)
 
 shap_back = {}
@@ -150,8 +156,8 @@ results = {
     for context_name in CONTEXT_TYPES
 }
 patients = patient_jsons["patients"]
-total_patients = len(patients)
-
+#total_patients = len(patients)
+total_patients = 4
 for context_name, context_key in CONTEXT_TYPES.items():
 
     task.get_logger().report_text(
@@ -252,10 +258,10 @@ for context_name, context_key in CONTEXT_TYPES.items():
             f"{min(start+BATCH_SIZE,total_patients)}/{total_patients}"
         )
 
-for context_name in CONTEXT_TYPES:
+# for context_name in CONTEXT_TYPES:
 
-    filename = f"inference_results_{context_name}.json"
-    print(results[context_name])
+#     filename = f"inference_results_{context_name}.json"
+#     print(results[context_name])
     # with open(filename, "w", encoding="utf-8") as f:
     #     json.dump(
     #         results[context_name],
@@ -269,4 +275,46 @@ for context_name in CONTEXT_TYPES:
     #     artifact_object=filename
     # )
 
-print(f"Done")
+def send_results_to_notebook(data, description=""):
+    try:
+        response = requests.post(
+            RECEIVER_URL,
+            json=data,
+            timeout=30
+        )
+        if response.status_code == 200:
+            print(f"Sent to notebook: {description}")
+            task.get_logger().report_text(f"Sent to notebook: {description}")
+            return True
+        else:
+            print(f"Failed ({response.status_code}): {response.text}")
+            return False
+    except Exception as e:
+        print(f"Error sending {description}: {e}")
+        task.get_logger().report_text(f"Send failed: {str(e)}")
+        return False
+
+all_results = {
+    "task_id": task.id,
+    "task_name": task.name,
+    "timestamp": time.time(),
+    "contexts": {}
+}
+for context_name in CONTEXT_TYPES:
+    all_results["contexts"][context_name] = results[context_name]
+
+send_results_to_notebook(all_results, "all_results_combined")
+
+all_results = {}
+for context_name in CONTEXT_TYPES:
+    all_results[context_name] = results[context_name]
+
+task.upload_artifact(
+    name="all_inference_results",
+    artifact_object=all_results,
+    metadata={"type": "combined_results"}
+)
+
+print("Done")
+time.sleep(10)
+task.close()
