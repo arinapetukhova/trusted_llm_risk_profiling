@@ -120,7 +120,7 @@ JSON schema
 with open('main_generations/data/all_patients.json', 'r', encoding='utf-8') as f:
     patient_jsons = json.load(f)
 
-with open('data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
+with open('main_generations/data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
     shap_back_list = json.load(f)
 
 shap_back = {}
