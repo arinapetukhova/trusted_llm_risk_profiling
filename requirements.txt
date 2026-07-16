@@ -4,3 +4,4 @@ huggingface-hub
 bitsandbytes
 accelerate
 clearml[s3]
+requests

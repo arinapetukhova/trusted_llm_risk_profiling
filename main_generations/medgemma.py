@@ -5,6 +5,7 @@ import json
 import os
 from clearml import Task
 import time
+import requests
 
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
@@ -15,7 +16,7 @@ task = Task.init(
     auto_connect_frameworks=False   
 )
 HF_TOKEN = None
-
+RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
 use_quantization = True
@@ -260,6 +261,47 @@ for context_name, context_key in CONTEXT_TYPES.items():
     #     name=f"medgemma_{context_name}",
     #     artifact_object=filename
     # )
+
+def send_results_to_notebook(data, description=""):
+    try:
+        response = requests.post(
+            RECEIVER_URL,
+            json=data,
+            timeout=30
+        )
+        if response.status_code == 200:
+            print(f"Sent to notebook: {description}")
+            task.get_logger().report_text(f"Sent to notebook: {description}")
+            return True
+        else:
+            print(f"Failed ({response.status_code}): {response.text}")
+            return False
+    except Exception as e:
+        print(f"Error sending {description}: {e}")
+        task.get_logger().report_text(f"Send failed: {str(e)}")
+        return False
+
+for context_name in CONTEXT_TYPES:
+    send_results_to_notebook(
+        {
+            "context_type": context_name,
+            "task_id": task.id,
+            "task_name": task.name,
+            "data": results[context_name]
+        },
+        f"medgemma_{context_name}"
+    )
+
+all_results = {
+    "task_id": task.id,
+    "task_name": task.name,
+    "timestamp": time.time(),
+    "contexts": {}
+}
+for context_name in CONTEXT_TYPES:
+    all_results["contexts"][context_name] = results[context_name]
+
+send_results_to_notebook(all_results, "all_results_combined")
 
 for context_name in CONTEXT_TYPES:
     task.upload_artifact(
