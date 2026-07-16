@@ -1,0 +1,514 @@
+[
+  {
+    "subject_id": 16380214,
+    "hadm_id": 20860234,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.2030675164268313,
+      "comorbidity_score": -0.1047308343855365,
+      "cumulative_medications": 0.0011775969241352,
+      "age": -0.0365498101879795,
+      "num_medications_daily": 0.0113719424176057,
+      "Obesity (END009)": 0.0343870737267267,
+      "Sodium (50983)": -0.0272204324397777,
+      "Platelet Count (51265)": -0.0056713807308976,
+      "num_chronic": 0.0230829234188513,
+      "RBC (51279)": 0.0229661634496399
+    }
+  },
+  {
+    "subject_id": 11719852,
+    "hadm_id": 29694624,
+    "shap_bck_values": {
+      "comorbidity_score": 0.3567638825130012,
+      "RDW (51277)": 0.1111690121839736,
+      "Heart failure (CIR019)": 0.0877462627346464,
+      "WBC (51301)": 0.0649047844716394,
+      "prior_admissions_12mo": 0.0533384546459365,
+      "RBC (51279)": 0.0528062429885413,
+      "Hematocrit (51221)": 0.0488184079701538,
+      "num_diagnoses": 0.0465275717509199,
+      "num_chronic": 0.0442731821393714,
+      "num_medications_daily": 0.0329981686852119
+    }
+  },
+  {
+    "subject_id": 10017882,
+    "hadm_id": 20281726,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.2029679927966961,
+      "age": 0.1472366071599718,
+      "num_diagnoses": 0.0943512723267797,
+      "num_chronic": 0.0617384831000721,
+      "Platelet Count (51265)": -0.0352533444447116,
+      "WBC (51301)": -0.0224066873192064,
+      "Calcium (50893)": -0.0212206567753008,
+      "cumulative_medications": 0.0194532059384755,
+      "RDW (51277)": -0.0107262067651559,
+      "Sodium (50983)": -0.0037337259033211
+    }
+  },
+  {
+    "subject_id": 18021792,
+    "hadm_id": 23272302,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.2083497955805705,
+      "comorbidity_score": -0.0861191398799792,
+      "age": 0.0697917572424421,
+      "num_medications_daily": 0.0434209625868743,
+      "Platelet Count (51265)": -0.0365855135570382,
+      "cumulative_medications": 0.0354685758083223,
+      "gender_male": 0.026929470426412,
+      "num_diagnoses": 0.0246779579676945,
+      "Sodium (50983)": -0.022397924927427,
+      "Hematocrit (51221)": -0.0088001538339176
+    }
+  },
+  {
+    "subject_id": 14486442,
+    "hadm_id": 24893935,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1859176685509685,
+      "age": -0.1193693004626441,
+      "comorbidity_score": -0.096081712799509,
+      "num_diagnoses": 0.0778143097397898,
+      "Aplastic anemia (BLD003)": 0.0524537052220148,
+      "num_chronic": 0.0493113272037005,
+      "RBC (51279)": 0.0437118868640781,
+      "num_medications_daily": 0.042521584265512,
+      "Hematocrit (51221)": 0.0392347533236482,
+      "Platelet Count (51265)": -0.0327275631641571
+    }
+  },
+  {
+    "subject_id": 18360819,
+    "hadm_id": 27033030,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 0.816920259726478,
+      "RDW (51277)": 0.1681999203831537,
+      "comorbidity_score": 0.0755006497131921,
+      "BUN (51006)": 0.0514744132975715,
+      "Sodium (50983)": -0.0491543172492265,
+      "Heart failure (CIR019)": 0.0480447173754532,
+      "age": 0.0446699350274207,
+      "gender_male": 0.0284538144275211,
+      "num_chronic": 0.0274565821522378,
+      "Hematocrit (51221)": -0.0251711374895762
+    }
+  },
+  {
+    "subject_id": 14898288,
+    "hadm_id": 21598790,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1949295356687526,
+      "age": -0.1461890364240071,
+      "num_medications_daily": 0.07470613470246,
+      "cumulative_medications": 0.0587903415347932,
+      "Major depressive disorder, single episode, unspecified (F329)": 0.0572945357891194,
+      "comorbidity_score": -0.0556099232593487,
+      "RDW (51277)": -0.0349791281730813,
+      "Obesity (END009)": 0.033471390825066,
+      "Sodium (50983)": -0.0300508781592452,
+      "RBC (51279)": -0.0097240682497192
+    }
+  },
+  {
+    "subject_id": 12789235,
+    "hadm_id": 26659628,
+    "shap_bck_values": {
+      "comorbidity_score": 0.1383286616544501,
+      "age": 0.0818025804056177,
+      "RDW (51277)": 0.0807843735323285,
+      "prior_admissions_12mo": -0.0742254189557995,
+      "num_diagnoses": 0.0437923392535075,
+      "num_chronic": 0.0379856786675357,
+      "cumulative_procedures": 0.0179044583039315,
+      "num_medications_daily": 0.0266912650922301,
+      "Hemoglobin (51222)": 0.0265776019763113,
+      "Bicarbonate (50882)": 0.0240643093336499
+    }
+  },
+  {
+    "subject_id": 10652693,
+    "hadm_id": 28272409,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1958275903284611,
+      "RDW (51277)": 0.1100570942211488,
+      "comorbidity_score": 0.0906652027431446,
+      "Heart failure (CIR019)": 0.0640449720644501,
+      "num_chronic": 0.0569785617343172,
+      "MCHC (51249)": -0.056614310737832,
+      "WBC (51301)": 0.0477339355595413,
+      "age": 0.0444253399181245,
+      "cumulative_procedures": -0.0434303372882309,
+      "num_diagnoses": 0.0424402139609665
+    }
+  },
+  {
+    "subject_id": 16124481,
+    "hadm_id": 28174564,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 1.358357653987566,
+      "age": -0.1550042143459395,
+      "RDW (51277)": 0.1031711815903989,
+      "num_medications_daily": 0.0581374909907351,
+      "num_diagnoses": 0.0409663981138263,
+      "comorbidity_score": -0.0384249046395642,
+      "num_chronic": 0.0349184728159012,
+      "Platelet Count (51265)": -0.0237712659778558,
+      "Anxiety disorder, unspecified (F419)": 0.019959783519224,
+      "cumulative_procedures": 0.0168630642914682
+    }
+  },
+  {
+    "subject_id": 13697787,
+    "hadm_id": 22246602,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1368167266885393,
+      "num_diagnoses": 0.0777928210319866,
+      "comorbidity_score": -0.0757979210187651,
+      "cumulative_procedures": 0.0588756954592251,
+      "age": 0.0493373332366991,
+      "num_chronic": 0.0477634367141862,
+      "RDW (51277)": 0.0452263038628863,
+      "Platelet Count (51265)": -0.0449837990246048,
+      "Sodium (50983)": 0.0417175514458843,
+      "num_medications_daily": 0.0227990274979417
+    }
+  },
+  {
+    "subject_id": 14413352,
+    "hadm_id": 20235742,
+    "shap_bck_values": {
+      "comorbidity_score": -0.1592765617017539,
+      "Hematocrit (51221)": 0.0660580363920992,
+      "cumulative_procedures": 0.0512114462843139,
+      "Platelet Count (51265)": -0.0312207561839295,
+      "prior_admissions_12mo": 0.0336870722325045,
+      "RBC (51279)": 0.0228204234416504,
+      "age": -0.029675459912014,
+      "gender_male": -0.0286742840544305,
+      "MCV (51250)": -0.0271053464224132,
+      "Hemoglobin (51222)": 0.0252430653616405
+    }
+  },
+  {
+    "subject_id": 19450100,
+    "hadm_id": 25314766,
+    "shap_bck_values": {
+      "RDW (51277)": 0.2061999185399781,
+      "comorbidity_score": -0.173579406497372,
+      "prior_admissions_12mo": 0.1234004133862754,
+      "RBC (51279)": 0.0940755490042033,
+      "Platelet Count (51265)": 0.0683746428112908,
+      "Hematocrit (51221)": 0.0613182390516794,
+      "Aplastic anemia (BLD003)": 0.0536955660239664,
+      "Hemoglobin (51222)": 0.037300251775382,
+      "Sodium (50983)": -0.018726563887626,
+      "num_medications_daily": 0.0278271155139316
+    }
+  },
+  {
+    "subject_id": 11653128,
+    "hadm_id": 24553816,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1622368296313197,
+      "RDW (51277)": -0.1032597739511129,
+      "Platelet Count (51265)": -0.0723340378796047,
+      "comorbidity_score": -0.0705812588766707,
+      "age": -0.0608886530885058,
+      "num_diagnoses": 0.0582215648434532,
+      "cumulative_procedures": 0.0555287368959136,
+      "num_chronic": 0.0502917899722911,
+      "Hyperlipidemia, unspecified (E785)": 0.0483998591825093,
+      "Sodium (50983)": -0.0197753148222045
+    }
+  },
+  {
+    "subject_id": 16536632,
+    "hadm_id": 27119150,
+    "shap_bck_values": {
+      "cumulative_medications": -0.3098058314648642,
+      "num_medications_daily": -0.2728737696204393,
+      "RDW (51277)": -0.0562212118640945,
+      "Platelet Count (51265)": -0.0568655314150623,
+      "age": -0.056116154927775,
+      "Diabetes mellitus with complication (END003)": 0.0520764822048067,
+      "Hyperlipidemia, unspecified (E785)": 0.0513576322777771,
+      "gender_male": 0.0511589116875575,
+      "Disorders of lipid metabolism (END010)": 0.0472445226797276,
+      "prior_admissions_12mo": -0.0299912434100542
+    }
+  },
+  {
+    "subject_id": 19231238,
+    "hadm_id": 21424071,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 1.4848467960835388,
+      "comorbidity_score": 0.1006052796454363,
+      "age": 0.0747267820010984,
+      "Sodium (50983)": 0.072670153662857,
+      "RDW (51277)": 0.0615000566208679,
+      "num_medications_daily": 0.0449230396894419,
+      "num_chronic": 0.0410880960418414,
+      "Heart failure (CIR019)": 0.0379558744202919,
+      "Creatinine (50912)": 0.0322202686452571,
+      "num_diagnoses": 0.0296081390319644
+    }
+  },
+  {
+    "subject_id": 18151496,
+    "hadm_id": 21104362,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 0.2970414058960113,
+      "comorbidity_score": 0.1530190346125403,
+      "RDW (51277)": 0.0775517246305139,
+      "Heart failure (CIR019)": 0.0620160060651778,
+      "RBC (51279)": 0.0536470522191234,
+      "age": 0.0534975668829355,
+      "num_chronic": 0.0477473601092731,
+      "num_diagnoses": 0.0405801507384603,
+      "Aplastic anemia (BLD003)": 0.034289446874277,
+      "Creatinine (50912)": 0.0286508146868891
+    }
+  },
+  {
+    "subject_id": 10857992,
+    "hadm_id": 22199407,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.2318001983289105,
+      "age": -0.1173945654841509,
+      "num_medications_daily": -0.0917031130059346,
+      "comorbidity_score": -0.0768228180785808,
+      "cumulative_medications": 0.0760431086768661,
+      "RDW (51277)": -0.053390845207535,
+      "Platelet Count (51265)": -0.059580385181304,
+      "Aplastic anemia (BLD003)": 0.0592445298239302,
+      "cumulative_procedures": -0.02583529412074,
+      "WBC (51301)": -0.0055754679886255
+    }
+  },
+  {
+    "subject_id": 13004228,
+    "hadm_id": 29566269,
+    "shap_bck_values": {
+      "RDW (51277)": 0.2161642081299909,
+      "comorbidity_score": 0.1947713508418809,
+      "prior_admissions_12mo": 0.0954999656160611,
+      "age": -0.0879898720450452,
+      "RBC (51279)": 0.0873479446543512,
+      "Hematocrit (51221)": 0.0805397615468561,
+      "BUN (51006)": 0.0657507561845225,
+      "Platelet Count (51265)": 0.0442743127174282,
+      "Sodium (50983)": -0.0262062812037507,
+      "Hemoglobin (51222)": 0.0394486425595646
+    }
+  },
+  {
+    "subject_id": 12815857,
+    "hadm_id": 25911030,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 0.3749427548568655,
+      "comorbidity_score": -0.1261458003154041,
+      "RDW (51277)": 0.1239853158155415,
+      "Platelet Count (51265)": -0.0488701449724248,
+      "num_medications_daily": 0.0441664381179521,
+      "age": -0.0382599104653911,
+      "Hematocrit (51221)": 0.0379705579248184,
+      "gender_male": 0.0335267365974232,
+      "num_chronic": 0.0334985055032825,
+      "cumulative_medications": 0.0279383102944171
+    }
+  },
+  {
+    "subject_id": 15794497,
+    "hadm_id": 28987036,
+    "shap_bck_values": {
+      "comorbidity_score": 0.3521614800878888,
+      "age": -0.1391213873058545,
+      "RBC (51279)": 0.0820420193744594,
+      "prior_admissions_12mo": 0.0779431028075578,
+      "RDW (51277)": 0.0647444248875426,
+      "Hematocrit (51221)": 0.0511097525680879,
+      "num_diagnoses": 0.0506924915686995,
+      "num_chronic": 0.037211781195152,
+      "Platelet Count (51265)": 0.0341300937157402,
+      "Aplastic anemia (BLD003)": 0.0309086486976702
+    }
+  },
+  {
+    "subject_id": 19654579,
+    "hadm_id": 23780957,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.2067474103726636,
+      "comorbidity_score": -0.0917143245510146,
+      "age": 0.0721063685040599,
+      "num_diagnoses": 0.046275637664421,
+      "cumulative_procedures": -0.042493643259495,
+      "Hyperlipidemia, unspecified (E785)": 0.0349203179936012,
+      "cumulative_medications": 0.0285440504288453,
+      "Glucose (50931)": 0.0283533945426279,
+      "Disorders of lipid metabolism (END010)": 0.02806136973526,
+      "RDW (51277)": -0.0276740269922811
+    }
+  },
+  {
+    "subject_id": 11961951,
+    "hadm_id": 21282341,
+    "shap_bck_values": {
+      "RDW (51277)": -0.1602210210596276,
+      "comorbidity_score": -0.1413122937028201,
+      "prior_admissions_12mo": -0.1326861903489953,
+      "Platelet Count (51265)": -0.0912347843771185,
+      "age": 0.0809516376879892,
+      "cumulative_procedures": 0.0452504489482221,
+      "Sodium (50983)": -0.0335615301022953,
+      "num_chronic": 0.03520006147827,
+      "WBC (51301)": 0.0301840227465254,
+      "Hematocrit (51221)": 0.0280307747783326
+    }
+  },
+  {
+    "subject_id": 14872672,
+    "hadm_id": 29294271,
+    "shap_bck_values": {
+      "comorbidity_score": 0.1917251125357605,
+      "RDW (51277)": 0.1853805029886187,
+      "prior_admissions_12mo": -0.1672718053260268,
+      "cumulative_procedures": 0.0860461788088866,
+      "Sodium (50983)": 0.0956726691209946,
+      "Heart failure (CIR019)": 0.07972353507463,
+      "num_medications_daily": 0.0618856066845949,
+      "Hematocrit (51221)": 0.0626525075088554,
+      "num_chronic": 0.0558812468810962,
+      "RBC (51279)": 0.0542977065189783
+    }
+  },
+  {
+    "subject_id": 16393879,
+    "hadm_id": 28139528,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 0.1853080130860689,
+      "age": -0.1421441195816732,
+      "comorbidity_score": 0.1022547690615174,
+      "RDW (51277)": 0.0799455520972405,
+      "num_medications_daily": 0.0507252011078635,
+      "cumulative_procedures": 0.0415510540536852,
+      "num_chronic": 0.0316243999957382,
+      "RBC (51279)": 0.0006877607737383,
+      "Major depressive disorder, single episode, unspecified (F329)": 0.0203549464045827,
+      "Hematocrit (51221)": -0.004981455238656
+    }
+  },
+  {
+    "subject_id": 17306425,
+    "hadm_id": 21245006,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.190123910015405,
+      "num_diagnoses": 0.09038477631084,
+      "comorbidity_score": -0.0860150443552629,
+      "num_chronic": 0.0780869104040708,
+      "Obesity (END009)": 0.0581234591134242,
+      "Platelet Count (51265)": -0.0328762440876211,
+      "WBC (51301)": -0.0195936546209902,
+      "Diabetes mellitus with complication (END003)": 0.0277245517185188,
+      "num_medications_daily": 0.0256216696076678,
+      "cumulative_medications": 0.0205875431274437
+    }
+  },
+  {
+    "subject_id": 15363935,
+    "hadm_id": 24356132,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 1.0968717344183825,
+      "comorbidity_score": -0.0864998032767903,
+      "External cause codes: place of occurrence of the external cause (EXT027)": -0.0385910309216069,
+      "age": 0.0364147452913448,
+      "num_medications_daily": 0.0337955803744671,
+      "Hyperlipidemia, unspecified (E785)": 0.027146992371754,
+      "Fluid and electrolyte disorders (END011)": 0.0246922164756551,
+      "Disorders of lipid metabolism (END010)": 0.0232635586067135,
+      "cumulative_medications": 0.0218854795002789,
+      "cumulative_procedures": -0.0209781815695487
+    }
+  },
+  {
+    "subject_id": 13509515,
+    "hadm_id": 29941380,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 0.4276228835618288,
+      "RDW (51277)": 0.1561344903952704,
+      "Sodium (50983)": 0.089431450853023,
+      "RBC (51279)": 0.0956987574287313,
+      "comorbidity_score": -0.0951207940903896,
+      "Platelet Count (51265)": 0.0653105271255602,
+      "Hematocrit (51221)": 0.0600457253429097,
+      "Aplastic anemia (BLD003)": 0.0424534694732331,
+      "Fluid and electrolyte disorders (END011)": 0.0364345467805621,
+      "External cause codes: place of occurrence of the external cause (EXT027)": -0.0294076041270621
+    }
+  },
+  {
+    "subject_id": 12487653,
+    "hadm_id": 25481295,
+    "shap_bck_values": {
+      "comorbidity_score": -0.1671557785100885,
+      "prior_admissions_12mo": -0.1547758693509022,
+      "num_chronic": 0.1001172956027121,
+      "Hemoglobin (51222)": 0.0513571721046046,
+      "age": -0.0396936869802457,
+      "cumulative_procedures": 0.0390576360289614,
+      "WBC (51301)": 0.0315688445009618,
+      "num_medications_daily": 0.0202104313483481,
+      "Hematocrit (51221)": 0.0275769656440425,
+      "gender_male": -0.0241071073008934
+    }
+  },
+  {
+    "subject_id": 11490720,
+    "hadm_id": 24212550,
+    "shap_bck_values": {
+      "prior_admissions_12mo": 0.3471816272624821,
+      "RDW (51277)": 0.1394587428142621,
+      "comorbidity_score": 0.1372942656216552,
+      "age": 0.1033423003563709,
+      "RBC (51279)": 0.0612630160871382,
+      "Hematocrit (51221)": 0.0387429411988872,
+      "Sodium (50983)": -0.0116363236420445,
+      "Heart failure (CIR019)": 0.0299984718183749,
+      "gender_male": -0.0270933967957201,
+      "Aplastic anemia (BLD003)": 0.0270642502540244
+    }
+  },
+  {
+    "subject_id": 15100271,
+    "hadm_id": 21139228,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1994328455038825,
+      "comorbidity_score": -0.0877286607105634,
+      "Obesity (END009)": 0.0683452164699701,
+      "age": 0.0493632621410491,
+      "num_chronic": 0.0356527564834444,
+      "gender_male": 0.0314576392134525,
+      "Disorders of lipid metabolism (END010)": 0.0306789930557109,
+      "Platelet Count (51265)": -0.0301337298336966,
+      "cumulative_medications": 0.026603358772348,
+      "RBC (51279)": -0.0152954245878102
+    }
+  },
+  {
+    "subject_id": 11897486,
+    "hadm_id": 23193352,
+    "shap_bck_values": {
+      "prior_admissions_12mo": -0.1873910648383844,
+      "age": 0.1855540581453851,
+      "External cause codes: place of occurrence of the external cause (EXT027)": -0.0952955516536712,
+      "comorbidity_score": -0.0821391443139418,
+      "num_diagnoses": 0.0643903222516291,
+      "Platelet Count (51265)": -0.0487953145485721,
+      "num_chronic": 0.0559903808852425,
+      "cumulative_procedures": -0.0378703380438901,
+      "Sodium (50983)": 0.0288420986312439,
+      "gender_male": -0.0335279288038964
+    }
+  }
+]

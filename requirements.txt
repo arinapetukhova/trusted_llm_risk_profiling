@@ -3,4 +3,4 @@ transformers
 huggingface-hub
 bitsandbytes
 accelerate
-clearml
+clearml[s3]

@@ -8,4 +8,9 @@ mimic-iv-clinical-database-demo-2.2
 *.png
 *.json
 .env
+!all_patients.json
+!shap_bck_all_patients.json
+!fewshot.json
+!patients_sample.json
 *.jsonl
+/drafts
