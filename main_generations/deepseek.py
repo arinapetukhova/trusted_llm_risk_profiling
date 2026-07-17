@@ -145,8 +145,8 @@ gen_config = GenerationConfig(
     pad_token_id=pipe.tokenizer.eos_token_id
 )
 CONTEXT_TYPES = {
-    "json": "json_context",
     "row_column": "row_column_context",
+    "json": "json_context",
     "text": "unstructured_context",
     "empty": "empty_context",
     "incomplete": "incomplete_context",

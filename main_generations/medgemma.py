@@ -137,8 +137,8 @@ for item in shap_back_list:
 
 
 CONTEXT_TYPES = {
-    "json": "json_context",
     "row_column": "row_column_context",
+    "json": "json_context",
     "text": "unstructured_context",
     "empty": "empty_context",
     "incomplete": "incomplete_context",
