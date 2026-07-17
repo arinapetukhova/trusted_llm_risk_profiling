@@ -8,7 +8,6 @@ import time
 import requests
 import pandas as pd
 
-os.environ["CLEARML_EXTRA_PACKAGES"] = "tabulate"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="Qwen2.5-32B Inference with SHAP",
@@ -22,7 +21,7 @@ RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_id = "Qwen/Qwen2.5-32B-Instruct"
 use_quantization = True
 max_new_tokens = 2000
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 
 config_params = {
     "model": model_id,
