@@ -52,10 +52,19 @@ print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
 login(HF_TOKEN)
 print(os.getcwd())
 
+num_gpus = torch.cuda.device_count()
 model_kwargs = dict(
     dtype=torch.bfloat16,
     device_map="auto"
 )
+
+if num_gpus > 1:
+    model_kwargs["device_map"] = "auto"
+    print("Multi-GPU")
+    BATCH_SIZE = 64
+else:
+    model_kwargs["device_map"] = "auto" 
+    print("Single GPU")
 
 if use_quantization:
     model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
@@ -150,7 +159,6 @@ results = {
 }
 patients = patient_jsons["patients"]
 total_patients = len(patients)
-total_patients = 16
 timing_results = {}
 
 for context_name, context_key in CONTEXT_TYPES.items():
