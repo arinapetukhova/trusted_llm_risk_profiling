@@ -6,6 +6,7 @@ import os
 from clearml import Task
 import time
 import requests
+import pandas as pd
 
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
@@ -21,7 +22,7 @@ model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
 use_quantization = True
 max_new_tokens = 2000
-BATCH_SIZE = 4
+BATCH_SIZE = 16
 
 config_params = {
     "model": model_variant,
@@ -136,11 +137,11 @@ for item in shap_back_list:
 
 CONTEXT_TYPES = {
     "json": "json_context",
-    # "row_column": "row_column_context",
-    # "text": "unstructured_context",
-    # "empty": "empty_context",
-    # "incomplete": "incomplete_context",
-    # "long": "long_list_context",
+    "row_column": "row_column_context",
+    "text": "unstructured_context",
+    "empty": "empty_context",
+    "incomplete": "incomplete_context",
+    "long": "long_list_context",
 }
 
 results = {
@@ -148,10 +149,13 @@ results = {
     for context_name in CONTEXT_TYPES
 }
 patients = patient_jsons["patients"]
-#total_patients = len(patients)
-total_patients = 4
-for context_name, context_key in CONTEXT_TYPES.items():
+total_patients = len(patients)
+total_patients = 16
+timing_results = {}
 
+for context_name, context_key in CONTEXT_TYPES.items():
+    context_inference_time = 0.0
+    num_batches = 0
     task.get_logger().report_text(
         f"\nProcessing {context_name.upper()}"
     )
@@ -171,7 +175,13 @@ for context_name, context_key in CONTEXT_TYPES.items():
             shap_strings = [f"- {factor}: {value:.4f}" for factor, value in top_10_items]
             shap_context_text = "\n".join(shap_strings)
 
-            if isinstance(context, str):
+            if context_name == "row_column":
+                context_text = pd.DataFrame(context).to_markdown(index=False)
+
+            elif context_name == "long":
+                context_text = "\n".join(context)
+
+            elif isinstance(context, str):
                 context_text = context
             else:
                 context_text = json.dumps(
@@ -209,12 +219,14 @@ for context_name, context_key in CONTEXT_TYPES.items():
             batch_messages.append(messages)
             batch_meta.append((sid, hid))
 
-            task.get_logger().report_text(
-                f"[{context_name}] "
-                f"Prepared patient "
-                f"{start+idx+1}/{total_patients} "
-                f"(subject_id={sid}, hadm_id={hid})"
-            )
+            # task.get_logger().report_text(
+            #     f"[{context_name}] "
+            #     f"Prepared patient "
+            #     f"{start+idx+1}/{total_patients} "
+            #     f"(subject_id={sid}, hadm_id={hid})"
+            # )
+
+        infer_start = time.perf_counter()
         with torch.inference_mode():
             outputs = pipe(
                 batch_messages,
@@ -224,9 +236,10 @@ for context_name, context_key in CONTEXT_TYPES.items():
                 batch_size=BATCH_SIZE
             )
 
-        print(type(outputs))
-        print(type(outputs[0]))
-        print(outputs[0])
+        infer_time = time.perf_counter() - infer_start
+        context_inference_time += infer_time
+        num_batches += 1
+
         for output, (sid, hid) in zip(outputs, batch_meta):
             response = output[0]["generated_text"][-1]["content"]
             results[context_name].append(
@@ -243,6 +256,14 @@ for context_name, context_key in CONTEXT_TYPES.items():
             f"Processed "
             f"{min(start+BATCH_SIZE,total_patients)}/{total_patients}"
         )
+
+    timing_results[context_name] = {
+    "total_inference_time_sec": context_inference_time,
+    "average_batch_time_sec": context_inference_time / num_batches,
+    "average_patient_time_sec": context_inference_time / total_patients,
+    "patients": total_patients,
+    "batches": num_batches
+}
 
 # for context_name in CONTEXT_TYPES:
 
@@ -285,6 +306,7 @@ all_results = {
     "task_id": task.id,
     "task_name": task.name,
     "timestamp": time.time(),
+    "timings": timing_results,
     "contexts": {}
 }
 for context_name in CONTEXT_TYPES:
@@ -296,6 +318,7 @@ all_results = {}
 for context_name in CONTEXT_TYPES:
     all_results[context_name] = results[context_name]
 
+all_results['timings'] = timing_results
 task.upload_artifact(
     name="all_inference_results",
     artifact_object=all_results,
