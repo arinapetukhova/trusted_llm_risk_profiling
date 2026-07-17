@@ -8,6 +8,7 @@ import time
 import requests
 import pandas as pd
 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="Qwen2.5-32B Inference with SHAP",
@@ -58,7 +59,7 @@ model_kwargs = dict(
 if num_gpus > 1:
     model_kwargs["device_map"] = "auto"
     print("Multi-GPU")
-    BATCH_SIZE = 64
+    BATCH_SIZE = 52
 else:
     model_kwargs["device_map"] = "auto" 
     print("Single GPU")
@@ -235,6 +236,8 @@ for context_name, context_key in CONTEXT_TYPES.items():
         batch_texts = [item["templated_text"] for item in batch_data]
         batch_meta = [item["meta"] for item in batch_data]
 
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         infer_start = time.perf_counter()
         with torch.inference_mode():
             outputs = pipe(
