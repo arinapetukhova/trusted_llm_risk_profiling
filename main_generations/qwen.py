@@ -145,11 +145,11 @@ gen_config = GenerationConfig(
 )
 CONTEXT_TYPES = {
     "long": "long_list_context",
-    # "row_column": "row_column_context",
-    # "json": "json_context",
-    # "text": "unstructured_context",
-    # "empty": "empty_context",
-    # "incomplete": "incomplete_context",
+    "row_column": "row_column_context",
+    "json": "json_context",
+    "text": "unstructured_context",
+    "empty": "empty_context",
+    "incomplete": "incomplete_context",
 }
 
 results = {

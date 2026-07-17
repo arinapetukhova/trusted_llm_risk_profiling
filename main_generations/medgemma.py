@@ -8,7 +8,6 @@ import time
 import requests
 import pandas as pd
 
-os.environ["CLEARML_EXTRA_PACKAGES"] = "tabulate"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="MedGemma Inference with SHAP",
@@ -23,7 +22,7 @@ model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
 use_quantization = True
 max_new_tokens = 2000
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 
 config_params = {
     "model": model_variant,
@@ -137,12 +136,12 @@ for item in shap_back_list:
 
 
 CONTEXT_TYPES = {
+    "long": "long_list_context",
     "row_column": "row_column_context",
     "json": "json_context",
     "text": "unstructured_context",
     "empty": "empty_context",
     "incomplete": "incomplete_context",
-    "long": "long_list_context",
 }
 
 results = {
