@@ -21,7 +21,7 @@ RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_id = "Qwen/Qwen2.5-32B-Instruct"
 use_quantization = True
 max_new_tokens = 2000
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 
 config_params = {
     "model": model_id,
@@ -144,12 +144,12 @@ gen_config = GenerationConfig(
     pad_token_id=pipe.tokenizer.eos_token_id
 )
 CONTEXT_TYPES = {
-    "row_column": "row_column_context",
-    "json": "json_context",
-    "text": "unstructured_context",
-    "empty": "empty_context",
-    "incomplete": "incomplete_context",
     "long": "long_list_context",
+    # "row_column": "row_column_context",
+    # "json": "json_context",
+    # "text": "unstructured_context",
+    # "empty": "empty_context",
+    # "incomplete": "incomplete_context",
 }
 
 results = {
