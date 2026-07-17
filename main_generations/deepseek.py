@@ -8,6 +8,7 @@ import time
 import requests
 import pandas as pd
 
+os.environ["CLEARML_EXTRA_PACKAGES"] = "tabulate"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="DeepSeek-R1-Distill-Qwen-32B Inference with SHAP",
@@ -21,7 +22,7 @@ RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_id = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
 use_quantization = True
 max_new_tokens = 4000
-BATCH_SIZE = 16
+BATCH_SIZE = 128
 
 config_params = {
     "model": model_id,
@@ -167,104 +168,88 @@ for context_name, context_key in CONTEXT_TYPES.items():
     task.get_logger().report_text(
         f"\nProcessing {context_name.upper()}"
     )
+
+    all_prepared_prompts = []
+    for p in patients:
+        sid = p["subject_id"]
+        hid = p["hadm_id"]
+        context = p[context_key]
+        raw_shap = shap_back.get((sid, hid), {})
+        top_10_items = list(raw_shap.items())[:10]
+        shap_strings = [f"- {factor}: {value:.4f}" for factor, value in top_10_items]
+        shap_context_text = "\n".join(shap_strings)
+
+        if context_name == "row_column":
+            context_text = pd.DataFrame(context).to_markdown(index=False)
+        elif context_name == "long":
+            context_text = "\n".join(context)
+        elif isinstance(context, str):
+            context_text = context
+        else:
+            context_text = json.dumps(context, ensure_ascii=False, indent=2)
+            
+        risk_score = p['risk_score']
+
+        prompt = f"""Analyze the following patient record.
+
+        Predicted 30-day readmission risk:
+        {risk_score}
+
+        Top 10 Statistical Risk Factors (SHAP values):
+        {shap_context_text}
+
+        Patient record:
+
+        {context_text}
+
+        Return only the JSON object."""
+
+        messages = [
+            {"role": "system", "content": role_instruction},
+            {"role": "user", "content": prompt}
+        ]
+
+        templated_text = pipe.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        
+        all_prepared_prompts.append({
+            "templated_text": templated_text,
+            "meta": (sid, hid),
+            "text_length": len(templated_text)
+        })
+
+    all_prepared_prompts.sort(key=lambda x: x["text_length"])
+
     for start in range(0, total_patients, BATCH_SIZE):
+        batch_data = all_prepared_prompts[start:start + BATCH_SIZE]
+        batch_texts = [item["templated_text"] for item in batch_data]
+        batch_meta = [item["meta"] for item in batch_data]
 
-        batch = patients[start:start + BATCH_SIZE]
-
-        batch_texts = []
-        batch_meta = []
-
-        for idx, p in enumerate(batch):
-
-            sid = p["subject_id"]
-            hid = p["hadm_id"]
-            context = p[context_key]
-            raw_shap = shap_back.get((sid, hid), {})
-            top_10_items = list(raw_shap.items())[:10]
-            shap_strings = [f"- {factor}: {value:.4f}" for factor, value in top_10_items]
-            shap_context_text = "\n".join(shap_strings)
-
-            if context_name == "row_column":
-                context_text = pd.DataFrame(context).to_markdown(index=False)
-
-            elif context_name == "long":
-                context_text = "\n".join(context)
-
-            elif isinstance(context, str):
-                context_text = context
-            else:
-                context_text = json.dumps(
-                    context,
-                    ensure_ascii=False,
-                    indent=2
-                )
-            risk_score = p['risk_score']
-
-            prompt = f"""Analyze the following patient record.
-
-            Predicted 30-day readmission risk:
-            {risk_score}
-
-            Top 10 Statistical Risk Factors (SHAP values):
-            {shap_context_text}
-
-            Patient record:
-
-            {context_text}
-
-            Return only the JSON object."""
-
-            messages = [
-                {
-                    "role": "system",
-                    "content": role_instruction
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-
-            text = pipe.tokenizer.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True
-            )
-
-            batch_texts.append(text)
-            batch_meta.append((sid, hid, len(text)))
-
-            # task.get_logger().report_text(
-            #     f"[{context_name}] "
-            #     f"Prepared patient "
-            #     f"{start+idx+1}/{total_patients} "
-            #     f"(subject_id={sid}, hadm_id={hid})"
-            # )
         infer_start = time.perf_counter()
         with torch.inference_mode():
             outputs = pipe(
                 batch_texts,
                 generation_config=gen_config,
-                batch_size=BATCH_SIZE
+                batch_size=len(batch_texts)
             )
-
+ 
         infer_time = time.perf_counter() - infer_start
         context_inference_time += infer_time
         num_batches += 1
 
-        for output, (sid, hid, prompt_len) in zip(outputs, batch_meta):
-            if isinstance(output, list):
-                output = output[0]
-
-            response = output["generated_text"][prompt_len:].strip()
-            results[context_name].append(
-                {
-                    "subject_id": sid,
-                    "hadm_id": hid,
-                    "context_type": context_name,
-                    "explanation": response
-                }
-            )
+        for output, (sid, hid), raw_prompt in zip(outputs, batch_meta, batch_texts):
+            full_generated_text = output[0]["generated_text"]
+            response = full_generated_text.replace(raw_prompt, "").strip()
+            
+            results[context_name].append({
+                "subject_id": sid,
+                "hadm_id": hid,
+                "context_type": context_name,
+                "explanation": response
+            })
 
         task.get_logger().report_text(
             f"[{context_name}] "

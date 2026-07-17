@@ -8,6 +8,7 @@ import time
 import requests
 import pandas as pd
 
+os.environ["CLEARML_EXTRA_PACKAGES"] = "tabulate"
 task = Task.init(
     project_name="pershin-medailab/LLM_verification_risk_profiles",
     task_name="MedGemma Inference with SHAP",
@@ -22,7 +23,7 @@ model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
 use_quantization = True
 max_new_tokens = 2000
-BATCH_SIZE = 16
+BATCH_SIZE = 128
 
 config_params = {
     "model": model_variant,
@@ -160,71 +161,59 @@ for context_name, context_key in CONTEXT_TYPES.items():
         f"\nProcessing {context_name.upper()}"
     )
 
+    all_prepared_prompts = []
+    
+    for p in patients:
+        sid = p["subject_id"]
+        hid = p["hadm_id"]
+        context = p[context_key]
+        raw_shap = shap_back.get((sid, hid), {})
+        top_10_items = list(raw_shap.items())[:10]
+        shap_strings = [f"- {factor}: {value:.4f}" for factor, value in top_10_items]
+        shap_context_text = "\n".join(shap_strings)
+
+        if context_name == "row_column":
+            context_text = pd.DataFrame(context).to_markdown(index=False)
+        elif context_name == "long":
+            context_text = "\n".join(context)
+        elif isinstance(context, str):
+            context_text = context
+        else:
+            context_text = json.dumps(context, ensure_ascii=False, indent=2)
+            
+        risk_score = p['risk_score']
+
+        prompt = f"""Analyze the following patient record.
+
+        Predicted 30-day readmission risk:
+        {risk_score}
+
+        Top 10 Statistical Risk Factors (SHAP values):
+        {shap_context_text}
+
+        Patient record:
+
+        {context_text}
+
+        Return only the JSON object."""
+
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": role_instruction}]},
+            {"role": "user", "content": [{"type": "text", "text": prompt}]}
+        ]
+        
+        all_prepared_prompts.append({
+            "messages": messages,
+            "meta": (sid, hid),
+            "text_length": len(prompt)
+        })
+
+    all_prepared_prompts.sort(key=lambda x: x["text_length"])
+
     for start in range(0, total_patients, BATCH_SIZE):
-
-        batch = patients[start:start + BATCH_SIZE]
-        batch_messages = []
-        batch_meta = []
-
-        for idx, p in enumerate(batch):
-            sid = p["subject_id"]
-            hid = p["hadm_id"]
-            context = p[context_key]
-            raw_shap = shap_back.get((sid, hid), {})
-            top_10_items = list(raw_shap.items())[:10]
-            shap_strings = [f"- {factor}: {value:.4f}" for factor, value in top_10_items]
-            shap_context_text = "\n".join(shap_strings)
-
-            if context_name == "row_column":
-                context_text = pd.DataFrame(context).to_markdown(index=False)
-
-            elif context_name == "long":
-                context_text = "\n".join(context)
-
-            elif isinstance(context, str):
-                context_text = context
-            else:
-                context_text = json.dumps(
-                    context,
-                    ensure_ascii=False,
-                    indent=2
-                )
-            risk_score = p['risk_score']
-
-            prompt = f"""Analyze the following patient record.
-
-            Predicted 30-day readmission risk:
-            {risk_score}
-
-            Top 10 Statistical Risk Factors (SHAP values):
-            {shap_context_text}
-
-            Patient record:
-
-            {context_text}
-
-            Return only the JSON object."""
-
-            messages = [
-                {
-                    "role": "system",
-                    "content": [{"type": "text", "text": role_instruction}]
-                },
-                {
-                    "role": "user",
-                    "content": [{"type": "text", "text": prompt}]
-                }
-            ]
-
-            batch_messages.append(messages)
-            batch_meta.append((sid, hid))
-
-            # task.get_logger().report_text(
-            #     f"[{context_name}] "
-            #     f"Prepared patient "
-            #     f"{start+idx+1}/{total_patients} "
-            #     f"(subject_id={sid}, hadm_id={hid})"
-            # )
+        batch_data = all_prepared_prompts[start:start + BATCH_SIZE]
+        batch_messages = [item["messages"] for item in batch_data]
+        batch_meta = [item["meta"] for item in batch_data]
 
         infer_start = time.perf_counter()
         with torch.inference_mode():
@@ -233,7 +222,7 @@ for context_name, context_key in CONTEXT_TYPES.items():
                 max_new_tokens=max_new_tokens,
                 do_sample=False,
                 pad_token_id=pipe.tokenizer.eos_token_id,
-                batch_size=BATCH_SIZE
+                batch_size=len(batch_messages)
             )
 
         infer_time = time.perf_counter() - infer_start
