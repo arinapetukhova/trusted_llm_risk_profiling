@@ -1,4 +1,5 @@
-from transformers import BitsAndBytesConfig, pipeline
+from vllm import LLM, SamplingParams
+from transformers import AutoTokenizer
 import torch
 from huggingface_hub import login
 import json
@@ -21,9 +22,9 @@ HF_TOKEN = None
 RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_variant = "medgemma-27b-it"
 model_id = f"google/{model_variant}"
-use_quantization = True
+use_quantization = False
 max_new_tokens = 2000
-BATCH_SIZE = 32
+BATCH_SIZE = 128
 
 config_params = {
     "model": model_variant,
@@ -54,27 +55,16 @@ login(HF_TOKEN)
 print(os.getcwd())
 
 num_gpus = torch.cuda.device_count()
-model_kwargs = dict(
-    dtype=torch.bfloat16,
-    device_map="auto"
+
+llm = LLM(
+    model=model_id,
+    tensor_parallel_size=num_gpus,
+    dtype="bfloat16",
+    gpu_memory_utilization=0.95,
+    trust_remote_code=True
 )
 
-if num_gpus > 1:
-    model_kwargs["device_map"] = "auto"
-    print("Multi-GPU")
-    BATCH_SIZE = 52
-else:
-    model_kwargs["device_map"] = "auto" 
-    print("Single GPU")
-
-if use_quantization:
-    model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True)
-
-if "text" in model_variant:
-    pipe = pipeline("text-generation", model=model_id, model_kwargs=model_kwargs)
-else:
-    pipe = pipeline("image-text-to-text", model=model_id, model_kwargs=model_kwargs)
-
+tokenizer = AutoTokenizer.from_pretrained(model_id)
 
 role_instruction = """You are a Medical Risk Explanation Assistant.
 
@@ -91,7 +81,7 @@ STRICT RULES
 2. DATA USE & FORBIDDEN FEATURES
 - Use ONLY information explicitly present in the input.
 - Never invent diagnoses, laboratory values, risk factors, or numerical values.
-- SHAP VALUES AS GUIDANCE: You are provided with 'Top 10 Statistical Risk Factors (SHAP values)' as a statistical reference. Treat them as secondary hints, NOT absolute truth. Evaluate them using your clinical knowledge. If a SHAP factor makes strong clinical sense, rely on it. If a SHAP factor lacks strong clinical relevance or justification for this specific patient profile, prioritize the broader medical record (EHR) data instead.
+- SHAP VALUES AS GUIDANCE: You are provided with 'Top Statistical Risk Factors (SHAP values)' as a statistical reference. Treat them as secondary hints, NOT absolute truth. Evaluate them using your clinical knowledge. If a SHAP factor makes strong clinical sense, rely on it. If a SHAP factor lacks strong clinical relevance or justification for this specific patient profile, prioritize the broader medical record (EHR) data instead.
 - CRITICAL: Use the EXACT feature names and text string representations from the patient's medical record (EHR) as they appear in the input data. Do not paraphrase or shorten them.
 - CRITICAL: Do NOT select, analyze, or mention the following factors under any circumstances: 'length_of_stay', 'insurance', 'admission_type', 'admission_location', or 'discharge_location'.
 
@@ -196,7 +186,7 @@ for context_name, context_key in CONTEXT_TYPES.items():
         Predicted 30-day readmission risk:
         {risk_score}
 
-        Top 10 Statistical Risk Factors (SHAP values):
+        Top Statistical Risk Factors (SHAP values):
         {shap_context_text}
 
         Patient record:
@@ -206,41 +196,53 @@ for context_name, context_key in CONTEXT_TYPES.items():
         Return only the JSON object."""
 
         messages = [
-            {"role": "system", "content": [{"type": "text", "text": role_instruction}]},
-            {"role": "user", "content": [{"type": "text", "text": prompt}]}
+            {
+                "role": "system",
+                "content": role_instruction
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
         ]
         
+        prompt_text = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+
         all_prepared_prompts.append({
-            "messages": messages,
+            "prompt": prompt_text,
             "meta": (sid, hid),
-            "text_length": len(prompt)
+            "text_length": len(prompt_text)
         })
 
     all_prepared_prompts.sort(key=lambda x: x["text_length"])
 
     for start in range(0, total_patients, BATCH_SIZE):
         batch_data = all_prepared_prompts[start:start + BATCH_SIZE]
-        batch_messages = [item["messages"] for item in batch_data]
+        batch_prompts = [item["prompt"] for item in batch_data]
         batch_meta = [item["meta"] for item in batch_data]
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        sampling_params = SamplingParams(
+            temperature=0,
+            max_tokens=max_new_tokens
+        )
+
         infer_start = time.perf_counter()
-        with torch.inference_mode():
-            outputs = pipe(
-                batch_messages,
-                max_new_tokens=max_new_tokens,
-                do_sample=False,
-                pad_token_id=pipe.tokenizer.eos_token_id,
-                batch_size=len(batch_messages)
-            )
+
+        outputs = llm.generate(
+            batch_prompts,
+            sampling_params
+        )
 
         infer_time = time.perf_counter() - infer_start
         context_inference_time += infer_time
         num_batches += 1
 
         for output, (sid, hid) in zip(outputs, batch_meta):
-            response = output[0]["generated_text"][-1]["content"]
+            response = output.outputs[0].text
             results[context_name].append(
                 {
                     "subject_id": sid,

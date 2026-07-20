@@ -1,4 +1,5 @@
-from transformers import BitsAndBytesConfig, pipeline, GenerationConfig
+from vllm import LLM, SamplingParams
+from transformers import AutoTokenizer
 import torch
 from huggingface_hub import login
 import json
@@ -20,9 +21,9 @@ task = Task.init(
 HF_TOKEN = None
 RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
 model_id = "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B"
-use_quantization = True
-max_new_tokens = 4000
-BATCH_SIZE = 32
+use_quantization = False
+max_new_tokens = 2000
+BATCH_SIZE = 128
 
 config_params = {
     "model": model_id,
@@ -51,32 +52,23 @@ print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
 login(HF_TOKEN)
 
 num_gpus = torch.cuda.device_count()
-model_kwargs = dict(
-    dtype=torch.bfloat16,
-    device_map="auto"
-)
 
 if num_gpus > 1:
-    model_kwargs["device_map"] = "auto"
     print("Multi-GPU")
-    BATCH_SIZE = 52
 else:
-    model_kwargs["device_map"] = "auto" 
     print("Single GPU")
 
-if use_quantization:
-    model_kwargs["quantization_config"] = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4"
-    )
 
-pipe = pipeline(
-    "text-generation",
+llm = LLM(
     model=model_id,
-    model_kwargs=model_kwargs,
-    tokenizer=model_id,
+    tensor_parallel_size=num_gpus,
+    dtype="bfloat16",
+    gpu_memory_utilization=0.95,
+    trust_remote_code=True
+)
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_id,
     trust_remote_code=True
 )
 
@@ -95,7 +87,7 @@ STRICT RULES
 2. DATA USE & FORBIDDEN FEATURES
 - Use ONLY information explicitly present in the input.
 - Never invent diagnoses, laboratory values, risk factors, or numerical values.
-- SHAP VALUES AS GUIDANCE: You are provided with 'Top 10 Statistical Risk Factors (SHAP values)' as a statistical reference. Treat them as secondary hints, NOT absolute truth. Evaluate them using your clinical knowledge. If a SHAP factor makes strong clinical sense, rely on it. If a SHAP factor lacks strong clinical relevance or justification for this specific patient profile, prioritize the broader medical record (EHR) data instead.
+- SHAP VALUES AS GUIDANCE: You are provided with 'Top Statistical Risk Factors (SHAP values)' as a statistical reference. Treat them as secondary hints, NOT absolute truth. Evaluate them using your clinical knowledge. If a SHAP factor makes strong clinical sense, rely on it. If a SHAP factor lacks strong clinical relevance or justification for this specific patient profile, prioritize the broader medical record (EHR) data instead.
 - CRITICAL: Use the EXACT feature names and text string representations from the patient's medical record (EHR) as they appear in the input data. Do not paraphrase or shorten them.
 - CRITICAL: Do NOT select, analyze, or mention the following factors under any circumstances: 'length_of_stay', 'insurance', 'admission_type', 'admission_location', or 'discharge_location'.
 
@@ -115,8 +107,9 @@ STRICT RULES
 - OTHER FEATURES RULE: For all other feature types (laboratory_values, clinical_indicators, demographics), use the exact key string as the "factor" and copy their exact numerical or textual value into the "value" field.
 
 5. OUTPUT FORMAT
-- You are allowed to use <thought>...</thought> tags to reason and analyze the clinical data before generating the final output.
-- IMMEDIATELY after closing the </thought> tag, you must return ONLY one valid JSON object.
+- You may reason internally. Do NOT output reasoning steps.
+- Your response must start with "{" and end with "}".
+- Return only the final JSON object.
 - Do NOT use any Markdown code blocks (like ```json or ```) around the JSON.
 - The JSON must contain exactly the keys shown below. Do not add extra fields.
 
@@ -148,10 +141,9 @@ for item in shap_back_list:
     hid = item["hadm_id"]
     shap_back[(sid, hid)] = item["shap_bck_values"]
 
-gen_config = GenerationConfig(
-    max_new_tokens=max_new_tokens,
-    do_sample=False,
-    pad_token_id=pipe.tokenizer.eos_token_id
+sampling_params = SamplingParams(
+    temperature=0,
+    max_tokens=max_new_tokens
 )
 CONTEXT_TYPES = {
     "long": "long_list_context",
@@ -203,7 +195,7 @@ for context_name, context_key in CONTEXT_TYPES.items():
         Predicted 30-day readmission risk:
         {risk_score}
 
-        Top 10 Statistical Risk Factors (SHAP values):
+        Top Statistical Risk Factors (SHAP values):
         {shap_context_text}
 
         Patient record:
@@ -217,7 +209,7 @@ for context_name, context_key in CONTEXT_TYPES.items():
             {"role": "user", "content": prompt}
         ]
 
-        templated_text = pipe.tokenizer.apply_chat_template(
+        templated_text = tokenizer.apply_chat_template(
             messages,
             tokenize=False,
             add_generation_prompt=True
@@ -236,24 +228,20 @@ for context_name, context_key in CONTEXT_TYPES.items():
         batch_texts = [item["templated_text"] for item in batch_data]
         batch_meta = [item["meta"] for item in batch_data]
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
         infer_start = time.perf_counter()
-        with torch.inference_mode():
-            outputs = pipe(
-                batch_texts,
-                generation_config=gen_config,
-                batch_size=len(batch_texts)
-            )
+
+        outputs = llm.generate(
+            batch_texts,
+            sampling_params
+        )
  
         infer_time = time.perf_counter() - infer_start
         context_inference_time += infer_time
         num_batches += 1
 
-        for output, (sid, hid), raw_prompt in zip(outputs, batch_meta, batch_texts):
-            full_generated_text = output[0]["generated_text"]
-            response = full_generated_text.replace(raw_prompt, "").strip()
-            
+        for output, (sid, hid) in zip(outputs, batch_meta):
+
+            response = output.outputs[0].text.strip()
             results[context_name].append({
                 "subject_id": sid,
                 "hadm_id": hid,
