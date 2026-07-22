@@ -7,3 +7,4 @@ clearml[s3]
 requests
 pandas
 tabulate
+vllm

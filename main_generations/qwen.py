@@ -4,66 +4,27 @@ import torch
 from huggingface_hub import login
 import json
 import os
-from clearml import Task
 import time
-import requests
 import pandas as pd
+from dotenv import load_dotenv
 
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-task = Task.init(
-    project_name="pershin-medailab/LLM_verification_risk_profiles",
-    task_name="Qwen2.5-32B Inference with SHAP",
-    #output_uri="s3://api.blackhole2.ai.innopolis.university:443/pershin-medailab"
-    output_uri=None,
-    auto_connect_arg_parser=False,
-    auto_connect_frameworks=False   
-)
-HF_TOKEN = None
-RECEIVER_URL = "https://elective-zipping-drum.ngrok-free.dev"
+load_dotenv()
+
+HF_TOKEN = os.getenv("HF_QW")
 model_id = "Qwen/Qwen2.5-32B-Instruct"
 use_quantization = False
 max_new_tokens = 2000
-BATCH_SIZE = 128
+BATCH_SIZE = 512
 
-config_params = {
-    "model": model_id,
-    "quantization": use_quantization,
-    "max_new_tokens": max_new_tokens,
-    "batch_size": BATCH_SIZE,
-    "HF_TOKEN": ""
-}
-task.connect(config_params) 
-
-if config_params.get("HF_TOKEN"):
-    HF_TOKEN = config_params["HF_TOKEN"]
-
-if not HF_TOKEN:
-    HF_TOKEN = os.environ.get("HF_TOKEN")
-
-if not HF_TOKEN:
-    try:
-        HF_TOKEN = task.get_parameter("General/HF_TOKEN") or task.get_parameter("Args/HF_TOKEN")
-    except:
-        pass
-
-if not HF_TOKEN:
-    raise ValueError("No HF_TOKEN")
 print(f"HF_TOKEN found: {HF_TOKEN[:15]}...")
 login(HF_TOKEN)
 
-num_gpus = torch.cuda.device_count()
-
-if num_gpus > 1:
-    print("Multi-GPU")
-else:
-    print("Single GPU")
-
-
 llm = LLM(
     model=model_id,
-    tensor_parallel_size=num_gpus,
+    tensor_parallel_size=1,
     dtype="bfloat16",
-    gpu_memory_utilization=0.95,
+    gpu_memory_utilization=0.90,
+    max_model_len=5000,
     trust_remote_code=True
 )
 
@@ -128,10 +89,10 @@ JSON schema
 }
 """
 
-with open('main_generations/data/all_patients.json', 'r', encoding='utf-8') as f:
+with open('./data/all_patients.json', 'r', encoding='utf-8') as f:
     patient_jsons = json.load(f)
 
-with open('main_generations/data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
+with open('./data/shap_bck_all_patients.json', 'r', encoding='utf-8') as f:
     shap_back_list = json.load(f)
 
 shap_back = {}
@@ -146,10 +107,10 @@ sampling_params = SamplingParams(
 )
 
 CONTEXT_TYPES = {
-    "long": "long_list_context",
     "row_column": "row_column_context",
-    "json": "json_context",
     "text": "unstructured_context",
+    "long": "long_list_context",
+    "json": "json_context",
     "empty": "empty_context",
     "incomplete": "incomplete_context",
 }
@@ -165,16 +126,26 @@ timing_results = {}
 for context_name, context_key in CONTEXT_TYPES.items():
     context_inference_time = 0.0
     num_batches = 0
-    task.get_logger().report_text(
-        f"\nProcessing {context_name.upper()}"
-    )
+
+    print("\nProcessing {context_name.upper()}")
 
     all_prepared_prompts = []
     for p in patients:
         sid = p["subject_id"]
         hid = p["hadm_id"]
         context = p[context_key]
-        raw_shap = shap_back.get((sid, hid), {})
+        if context_name in ["empty", "incomplete"]:
+            risk_score = context.get('risk_score', 0.0)
+            raw_shap = context.get('shap_bck_values', {})
+            context_clean = context.copy()
+            context_clean.pop('risk_score', None)
+            context_clean.pop('shap_bck_values', None)
+            context = context_clean
+
+        else:
+            risk_score = p['risk_score']
+            raw_shap = shap_back.get((sid, hid), {})
+        
         top_10_items = list(raw_shap.items())[:10]
         shap_strings = [f"- {factor}: {value:.4f}" for factor, value in top_10_items]
         shap_context_text = "\n".join(shap_strings)
@@ -187,8 +158,6 @@ for context_name, context_key in CONTEXT_TYPES.items():
             context_text = context
         else:
             context_text = json.dumps(context, ensure_ascii=False, indent=2)
-            
-        risk_score = p['risk_score']
 
         prompt = f"""Analyze the following patient record.
 
@@ -249,11 +218,9 @@ for context_name, context_key in CONTEXT_TYPES.items():
                 "explanation": response
             })
 
-        task.get_logger().report_text(
-            f"[{context_name}] "
-            f"Processed "
-            f"{min(start+BATCH_SIZE,total_patients)}/{total_patients}"
-        )
+        print(f"[{context_name}] ")
+        print(f"Processed ")
+        print(f"{min(start+BATCH_SIZE,total_patients)}/{total_patients}")
 
     timing_results[context_name] = {
     "total_inference_time_sec": context_inference_time,
@@ -263,64 +230,15 @@ for context_name, context_key in CONTEXT_TYPES.items():
     "batches": num_batches
 }
 
-# for context_name in CONTEXT_TYPES:
-#     filename = f"inference_results_{context_name}.json"
-#     print(results[context_name])
-    # with open(filename, "w", encoding="utf-8") as f:
-    #     json.dump(
-    #         results[context_name],
-    #         f,
-    #         ensure_ascii=False,
-    #         indent=2
-    #     )
-
-    # task.upload_artifact(
-    #     name=f"qwen_{context_name}",
-    #     artifact_object=filename
-    # )
-
-def send_results_to_notebook(data, description=""):
-    try:
-        response = requests.post(
-            RECEIVER_URL,
-            json=data,
-            timeout=30
-        )
-        if response.status_code == 200:
-            print(f"Sent to notebook: {description}")
-            task.get_logger().report_text(f"Sent to notebook: {description}")
-            return True
-        else:
-            print(f"Failed ({response.status_code}): {response.text}")
-            return False
-    except Exception as e:
-        print(f"Error sending {description}: {e}")
-        task.get_logger().report_text(f"Send failed: {str(e)}")
-        return False
-
 all_results = {
-    "task_id": task.id,
-    "task_name": task.name,
-    "timestamp": time.time(),
+    "model": "Qwen",
     "timings": timing_results,
     "contexts": {}
 }
+
 for context_name in CONTEXT_TYPES:
     all_results["contexts"][context_name] = results[context_name]
 
-send_results_to_notebook(all_results, "all_results_combined")
-
-all_results = {}
-for context_name in CONTEXT_TYPES:
-    all_results[context_name] = results[context_name]
-
-all_results['timings'] = timing_results
-task.upload_artifact(
-    name="all_inference_results",
-    artifact_object=all_results,
-    metadata={"type": "combined_results"}
-)
-
+with open("qwen_results_not_full.json", "w", encoding="utf-8") as f:
+    json.dump(all_results, f, ensure_ascii=False, indent=4)
 print("Done")
-time.sleep(10)
-task.close()
